@@ -13,9 +13,9 @@ permissions:
 
 env:
   AWS_DEFAULT_REGION: us-west-1
-  ARTIFACTS_BUCKET_NAME: aws-project-template-artifacts
-  ROLE_TO_ASSUME: arn:aws:iam::358648860587:role/aws_project_templateProjectOidcRole
-  FRONTEND_BUCKET_NAME: aws-project-template-frontend-bucket 
+  ARTIFACTS_BUCKET_NAME: vandersman-artifacts
+  ROLE_TO_ASSUME: arn:aws:iam::358648860587:role/vandersmanProjectOidcRole
+  FRONTEND_BUCKET_NAME: vandersman-frontend-bucket 
 
 jobs:
   build-lambda-package:
