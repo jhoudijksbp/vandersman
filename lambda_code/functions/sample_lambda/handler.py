@@ -5,7 +5,7 @@ from aws_lambda_powertools import Logger
 logger = Logger()
 
 def lambda_handler(event, context):
-    logger.info("Lambda function has been invoked.")
+    logger.info("vanderSman Lambda function has been invoked.")
     logger.info({"event": event})
 
     # Example processing
