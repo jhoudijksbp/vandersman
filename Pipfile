@@ -1,0 +1,52 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+coloredlogs = "~=15.0.1"
+invoke = "~=2.2.0"
+pytest = ">=7.4.0,<8.0"
+pytest-cov = "~=3.0.0"
+pytest-env = "~=0.6.2"
+pre-commit = "~=2.17.0"
+moto = {version = "~=4.2.5", extras = ["all", "ec2", "s3"]}
+pytest-xdist = "~=3.3.1"
+cfn-lint = "*"
+oauthlib = "~=3.2.2"
+requests_oauthlib = "~=2.0.0"
+
+[packages]
+aws-lambda-powertools = "~=2.26.0"
+pynamodb = "~=5.5.1"
+requests = "~=2.31.0"
+tzdata = "*"
+pillow = "==10.4.0"
+boto3 = "1.35.99"
+botocore = "1.35.99"
+
+[pipenv]
+allow_prereleases = true
+
+[requires]
+python_version = "3.11"
+
+[scripts]
+build = "invoke build"
+build-terraform = "invoke build-terraform"
+clean = "invoke clean"
+generate-lambda-manifest = "invoke generate-lambda-manifest"
+help = "invoke -l"
+init-terraform = "invoke init-terraform"
+lint = "invoke lint"
+lint-code = "invoke lint-code"
+lint-terraform = "invoke lint-terraform"
+release = "invoke release"
+release-terraform = "invoke release-terraform"
+reset = "invoke reset"
+pub-sub-scaffolding = "invoke pub-sub-scaffolding"
+scan = "invoke scan"
+scan-terraform = "invoke scan-terraform"
+test = "invoke test"
+test-functional = "invoke test-functional"
+test-unit = "invoke test-unit"

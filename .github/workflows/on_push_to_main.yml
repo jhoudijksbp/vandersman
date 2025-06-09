@@ -1,0 +1,106 @@
+---
+
+name: On Push to Main
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_DEFAULT_REGION: us-west-1
+  ARTIFACTS_BUCKET_NAME: aws-project-template-artifacts
+  ROLE_TO_ASSUME: arn:aws:iam::358648860587:role/aws_project_templateProjectOidcRole
+  FRONTEND_BUCKET_NAME: aws-project-template-frontend-bucket 
+
+jobs:
+  build-lambda-package:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            application_code:
+              - 'lambda_code/**'
+            libs:
+              - 'Pipfile.lock'
+            frontend:
+              - 'frontend/build/**'
+
+      - name: Setup python 3.11.6
+        if: steps.filter.outputs.application_code == 'true' || steps.filter.outputs.libs == 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11.6"
+
+      - name: Setup pipenv
+        if: steps.filter.outputs.application_code == 'true' || steps.filter.outputs.libs == 'true'
+        uses: jhoudijksbp/install-pipenv-action@v5
+        with:
+          version: 2023.9.1
+
+      - name: Build function package
+        if: steps.filter.outputs.application_code == 'true'
+        run: zip -r lambda_code.zip lambda_code
+        shell: bash
+
+      - name: Build library package
+        if: steps.filter.outputs.libs == 'true'
+        run: |
+          cd lambda_code
+
+          # Genereer requirements uit pipenv
+          pipenv requirements > temp.txt
+
+          # Verwijder ongewenste packages
+          grep -v "site-packages\|botocore\|boto3" temp.txt > requirement.txt
+
+          # Corrigeer foutieve versie-aanduidingen
+          sed -i.bak 's/==~=/~=/' requirement.txt
+          sed -i.bak 's/====/==/' requirement.txt
+
+          # Toon requirements voor debugging
+          cat requirement.txt
+
+          # Installeer packages in Lambda layer
+          pip install -r requirement.txt --no-deps -t libs/opt/python/lib/python3.11/site-packages
+
+          # Maak ZIP-bestand
+          cd libs/opt
+          zip -r lambda_code-libs.zip python/
+        shell: bash
+
+      - name: Get deploy credentials
+        if: steps.filter.outputs.application_code == 'true' || steps.filter.outputs.libs == 'true' || steps.filter.outputs.frontend == 'true'
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          role-session-name: deploy_github_dev
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+          audience: sts.amazonaws.com
+          mask-aws-account-id: 'no'
+
+
+      - name: Upload function artifact to S3
+        if: steps.filter.outputs.application_code == 'true'
+        run: aws s3 cp lambda_code.zip s3://${{ env.ARTIFACTS_BUCKET_NAME }}/lambda_code.zip
+
+      - name: Upload layer artifact to S3
+        if: steps.filter.outputs.libs == 'true'
+        run: aws s3 cp lambda_code/libs/opt/lambda_code-libs.zip s3://${{ env.ARTIFACTS_BUCKET_NAME }}/lambda_code-libs.zip
+
+      - name: Remove frontend
+        if: steps.filter.outputs.frontend == 'true'
+        run: aws s3 rm s3://${{ env.FRONTEND_BUCKET_NAME }}/  --recursive
+
+      - name: Upload website to S3 frontend bucket
+        if: steps.filter.outputs.frontend == 'true'
+        run: aws s3 cp frontend/build/ s3://${{ env.FRONTEND_BUCKET_NAME }}/  --recursive

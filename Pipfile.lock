@@ -1,0 +1,48 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "7c45c34b3c7dd86c2c9f59945eb33b29b9a9c085102fa8db601f94b33cf82975"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.11"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "aws-lambda-powertools": "~=2.26.0",
+        "boto3": "1.35.99",
+        "botocore": "1.35.99",
+        "pillow": "==10.4.0",
+        "pynamodb": "~=5.5.1",
+        "requests": "~=2.31.0",
+        "tzdata": "*"
+    },
+    "develop": {
+        "cfn-lint": "*",
+        "coloredlogs": "~=15.0.1",
+        "invoke": "~=2.2.0",
+        "moto": {
+            "extras": [
+                "all",
+                "ec2",
+                "s3"
+            ],
+            "version": "~=4.2.5"
+        },
+        "oauthlib": "~=3.2.2",
+        "pre-commit": "~=2.17.0",
+        "pytest": ">=7.4.0,<8.0",
+        "pytest-cov": "~=3.0.0",
+        "pytest-env": "~=0.6.2",
+        "pytest-xdist": "~=3.3.1",
+        "requests_oauthlib": "~=2.0.0"
+    }
+}
+
