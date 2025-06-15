@@ -60,14 +60,17 @@ resource "aws_appsync_resolver" "add_item" {
 
   request_template = <<EOF
 {
-  "version": "2018-05-29",
-  "operation": "PutItem",
-  "key": {
-    "id": { "S": "$ctx.args.input.id" }
+  "version" : "2018-05-29",
+  "operation" : "PutItem",
+  "key" : {
+    "id" : $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
   },
-  "attributeValues": {
-    "name": { "S": "$ctx.args.input.name" },
-    "description": { "S": "$ctx.args.input.description" }
+  "attributeValues" : {
+    "klant": $util.dynamodb.toDynamoDBJson($ctx.args.input.klant),
+    "medewerker": $util.dynamodb.toDynamoDBJson($ctx.args.input.medewerker),
+    "products": $util.dynamodb.toDynamoDBJson($ctx.args.input.products),
+    "services": $util.dynamodb.toDynamoDBJson($ctx.args.input.services),
+    "datum": $util.dynamodb.toDynamoDBJson($ctx.args.input.datum)
   }
 }
 EOF
@@ -99,3 +102,34 @@ $util.toJson($ctx.result.items)
 EOF
 }
 
+resource "aws_appsync_resolver" "update_item" {
+  api_id      = aws_appsync_graphql_api.example.id
+  type        = "Mutation"
+  field       = "updateItem"
+  data_source = aws_appsync_datasource.dynamodb.name
+
+  request_template = <<EOF
+{
+  "version" : "2018-05-29",
+  "operation" : "PutItem",
+  "key" : {
+    "id" : $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
+  },
+  "attributeValues" : {
+    "klant": $util.dynamodb.toDynamoDBJson($ctx.args.input.klant),
+    "medewerker": $util.dynamodb.toDynamoDBJson($ctx.args.input.medewerker),
+    "products": $util.dynamodb.toDynamoDBJson($ctx.args.input.products),
+    "services": $util.dynamodb.toDynamoDBJson($ctx.args.input.services),
+    "datum": $util.dynamodb.toDynamoDBJson($ctx.args.input.datum)
+  }
+}
+EOF
+
+  response_template = <<EOF
+$util.toJson($ctx.args.input)
+EOF
+
+  depends_on = [
+    aws_appsync_graphql_api.example
+  ]
+}

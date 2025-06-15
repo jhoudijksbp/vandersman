@@ -1,15 +1,3 @@
-type Item {
-  id: ID!
-  name: String
-  description: String
-}
-
-input NewItemInput {
-  id: ID!
-  name: String
-  description: String
-}
-
 type Query {
   getItem(id: ID!): Item
   listItems: [Item]
@@ -17,4 +5,56 @@ type Query {
 
 type Mutation {
   addItem(input: NewItemInput!): Item
+  updateItem(input: UpdateItemInput!): Item
+}
+
+type Item {
+  id: ID!
+  klant: String
+  medewerker: String
+  products: [Product]
+  services: [Service]
+  datum: AWSDateTime
+}
+
+input NewItemInput {
+  id: ID!
+  klant: String
+  medewerker: String
+  products: [ProductInput]
+  services: [ServiceInput]
+  datum: AWSDateTime
+}
+
+input UpdateItemInput {
+  id: ID!
+  klant: String
+  medewerker: String
+  products: [ProductInput]
+  services: [ServiceInput]
+  datum: AWSDateTime
+}
+
+type Product {
+  name: String
+  price: Float
+  description: String
+}
+
+type Service {
+  name: String
+  hours: Float
+  description: String
+}
+
+input ProductInput {
+  name: String
+  price: Float
+  description: String
+}
+
+input ServiceInput {
+  name: String
+  hours: Float
+  description: String
 }
