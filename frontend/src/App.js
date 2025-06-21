@@ -1,11 +1,16 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import PageOne from "./pages/EditWerkbon";
 import PageTwo from "./pages/AddWerkbon";
+import Login from "./Login";
+import PrivateRoute from "./PrivateRoute";
+import LogoutButton from "./components/LogoutButton";
 
-function App() {
+function WerkbonApp() {
   const [tab, setTab] = useState("one");
 
   return (
+    
     <div className="min-h-screen bg-white p-4 md:p-12">
       <h1 className="text-2xl font-bold mb-6 text-center text-[rgb(113,148,48)]">
         Jordy van der Sman Werkbon APP
@@ -31,8 +36,27 @@ function App() {
       <div className="max-w-4xl mx-auto">
         {tab === "one" ? <PageOne /> : <PageTwo />}
       </div>
+      <div className="mt-8 text-center">
+        <LogoutButton />
+      </div>
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <WerkbonApp />
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+    </Router>
+  );
+}

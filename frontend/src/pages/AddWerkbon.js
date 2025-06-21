@@ -1,10 +1,7 @@
-import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/api";
-import awsExports from "../aws-exports";
 import { addItem } from "../graphql/queries";
 import WerkbonForm from "../components/WerkbonForm";
 
-Amplify.configure(awsExports);
 const client = generateClient();
 
 const EXAMPLE_PRODUCTS = ["Product A", "Product B"];
