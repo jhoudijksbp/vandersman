@@ -35,3 +35,8 @@ variable "region" {
   default     = "us-west-1"
   description = "The AWS region to deploy the resources in"
 }
+
+variable "werkbon_dynamodb_table" {
+  description = "Full DynamoDB table configuration object"
+  type = any
+}

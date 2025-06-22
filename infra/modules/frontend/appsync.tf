@@ -25,7 +25,7 @@ resource "aws_appsync_datasource" "dynamodb" {
   service_role_arn = aws_iam_role.appsync_role.arn
 
   dynamodb_config {
-    table_name = aws_dynamodb_table.sample.name
+    table_name =  var.werkbon_dynamodb_table.name
   }
 }
 

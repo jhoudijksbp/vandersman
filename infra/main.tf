@@ -32,6 +32,7 @@ module "frontend" {
   lambda_package_version_id     = data.aws_s3_object.lambda_package.version_id
   project_name                  = local.project_name
   shared_kms_key_arn            = aws_kms_key.objects.arn
+  werkbon_dynamodb_table        = module.backend.werkbon_dynamodb_table
 
   depends_on = [
     module.backend,

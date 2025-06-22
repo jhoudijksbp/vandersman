@@ -1,6 +1,6 @@
 # ✅ DynamoDB Table: cryptohoudini-fills (Stores individual trades)
-resource "aws_dynamodb_table" "sample" {
-  name         =  "${var.project_name}-sample"
+resource "aws_dynamodb_table" "werkbon" {
+  name         =  "${var.project_name}-werkbon"
   billing_mode = "PAY_PER_REQUEST" 
   hash_key     = "id"
 
