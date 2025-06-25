@@ -1,5 +1,5 @@
 resource "aws_cognito_user_pool" "main" {
-  name = "jvds-user-pool"
+  name = "${var.project_name}-user-pool"
 
   username_attributes       = ["email"]
   auto_verified_attributes  = ["email"]
@@ -10,6 +10,7 @@ resource "aws_cognito_user_pool" "main" {
     require_uppercase = true
     require_numbers   = true
     require_symbols   = false
+    temporary_password_validity_days = 7
   }
 
   admin_create_user_config {
@@ -24,19 +25,6 @@ resource "aws_cognito_user_pool" "main" {
 
   mfa_configuration = "OFF"
 
-  schema {
-    attribute_data_type = "String"
-    name                = "given_name"
-    required            = false
-    mutable             = true
-  }
-
-  schema {
-    attribute_data_type = "String"
-    name                = "family_name"
-    required            = false
-    mutable             = true
-  }
 }
 
 resource "aws_cognito_user_pool_client" "react_app" {
@@ -62,7 +50,7 @@ resource "aws_cognito_user_pool_client" "react_app" {
 }
 
 resource "aws_cognito_user_pool_domain" "default" {
-  domain       = "jvds-werkbon-app"
+  domain       = "${var.project_name}-werkbon-app"
   user_pool_id = aws_cognito_user_pool.main.id
 }
 

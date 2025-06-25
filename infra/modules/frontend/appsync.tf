@@ -1,6 +1,12 @@
-resource "aws_appsync_graphql_api" "example" {
-  name                = "example-api"
-  authentication_type = "API_KEY"
+resource "aws_appsync_graphql_api" "appsync_api" {
+  name                = "${var.project_name}-api"
+  authentication_type = "AMAZON_COGNITO_USER_POOLS"
+
+  user_pool_config {
+    user_pool_id     = aws_cognito_user_pool.main.id
+    aws_region       = "us-west-1"
+    default_action   = "ALLOW"
+  }
 
   log_config {
     field_log_level           = "ALL"
@@ -11,15 +17,8 @@ resource "aws_appsync_graphql_api" "example" {
   schema = file("${path.module}/schema.graphql")
 }
 
-resource "aws_appsync_api_key" "example" {
-  api_id      = aws_appsync_graphql_api.example.id
-  expires     = timeadd(timestamp(), "31536000s")
-}
-
-
-
 resource "aws_appsync_datasource" "dynamodb" {
-  api_id           = aws_appsync_graphql_api.example.id
+  api_id           = aws_appsync_graphql_api.appsync_api.id
   name             = "ItemsTable"
   type             = "AMAZON_DYNAMODB"
   service_role_arn = aws_iam_role.appsync_role.arn
@@ -30,7 +29,7 @@ resource "aws_appsync_datasource" "dynamodb" {
 }
 
 resource "aws_appsync_resolver" "get_item" {
-  api_id          = aws_appsync_graphql_api.example.id
+  api_id          = aws_appsync_graphql_api.appsync_api.id
   type            = "Query"
   field           = "getItem"
   data_source     = aws_appsync_datasource.dynamodb.name
@@ -53,7 +52,7 @@ EOF
 }
 
 resource "aws_appsync_resolver" "add_item" {
-  api_id      = aws_appsync_graphql_api.example.id
+  api_id      = aws_appsync_graphql_api.appsync_api.id
   type        = "Mutation"
   field       = "addItem"
   data_source = aws_appsync_datasource.dynamodb.name
@@ -80,12 +79,12 @@ $util.toJson($ctx.args.input)
 EOF
 
   depends_on = [
-    aws_appsync_graphql_api.example
+    aws_appsync_graphql_api.appsync_api
   ]
 }
 
 resource "aws_appsync_resolver" "list_items" {
-  api_id          = aws_appsync_graphql_api.example.id
+  api_id          = aws_appsync_graphql_api.appsync_api.id
   type            = "Query"
   field           = "listItems"
   data_source     = aws_appsync_datasource.dynamodb.name
@@ -103,7 +102,7 @@ EOF
 }
 
 resource "aws_appsync_resolver" "update_item" {
-  api_id      = aws_appsync_graphql_api.example.id
+  api_id      = aws_appsync_graphql_api.appsync_api.id
   type        = "Mutation"
   field       = "updateItem"
   data_source = aws_appsync_datasource.dynamodb.name
@@ -130,6 +129,6 @@ $util.toJson($ctx.args.input)
 EOF
 
   depends_on = [
-    aws_appsync_graphql_api.example
+    aws_appsync_graphql_api.appsync_api
   ]
 }

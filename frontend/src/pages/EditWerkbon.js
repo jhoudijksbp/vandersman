@@ -6,7 +6,7 @@ import { listItems, updateItem } from "../graphql/queries";
 import WerkbonForm from "../components/WerkbonForm";
 
 Amplify.configure(awsExports);
-const client = generateClient();
+const client = generateClient({ authMode: "userPool" });
 
 const EXAMPLE_PRODUCTS = ["Product A", "Product B"];
 const EXAMPLE_SERVICES = ["Jip Amiabel", "Timo Siebelink"];
@@ -29,7 +29,8 @@ function PageEdit() {
     setLoading(true);
     try {
       const result = await client.graphql({ query: listItems });
-      setItems(result.data.listItems || []);
+      const itemsList = result.data?.listItems || []; // ✅ fix hier
+      setItems(itemsList);
     } catch (err) {
       console.error("Fout bij ophalen:", err);
     } finally {
@@ -43,7 +44,10 @@ function PageEdit() {
       datum: new Date().toISOString(),
     };
     try {
-      await client.graphql({ query: updateItem, variables: { input: updatedItem } });
+      await client.graphql({
+        query: updateItem,
+        variables: { input: updatedItem },
+      });
       alert("Werkbon bijgewerkt!");
       setEditingItem(null);
       fetchItems();
@@ -95,22 +99,13 @@ function PageEdit() {
             <table className="min-w-full table-auto border border-gray-300 text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th
-                    className="border px-3 py-2 cursor-pointer"
-                    onClick={() => handleSort("datum")}
-                  >
+                  <th className="border px-3 py-2 cursor-pointer" onClick={() => handleSort("datum")}>
                     Datum
                   </th>
-                  <th
-                    className="border px-3 py-2 cursor-pointer"
-                    onClick={() => handleSort("klant")}
-                  >
+                  <th className="border px-3 py-2 cursor-pointer" onClick={() => handleSort("klant")}>
                     Klant
                   </th>
-                  <th
-                    className="border px-3 py-2 cursor-pointer"
-                    onClick={() => handleSort("medewerker")}
-                  >
+                  <th className="border px-3 py-2 cursor-pointer" onClick={() => handleSort("medewerker")}>
                     Medewerker
                   </th>
                   <th className="border px-3 py-2">Acties</th>
