@@ -69,7 +69,8 @@ resource "aws_appsync_resolver" "add_item" {
     "medewerker": $util.dynamodb.toDynamoDBJson($ctx.args.input.medewerker),
     "products": $util.dynamodb.toDynamoDBJson($ctx.args.input.products),
     "services": $util.dynamodb.toDynamoDBJson($ctx.args.input.services),
-    "datum": $util.dynamodb.toDynamoDBJson($ctx.args.input.datum)
+    "datum": $util.dynamodb.toDynamoDBJson($ctx.args.input.datum),
+    "datumOpdracht": $util.dynamodb.toDynamoDBJson($ctx.args.input.datumOpdracht)
   }
 }
 EOF
@@ -119,7 +120,8 @@ resource "aws_appsync_resolver" "update_item" {
     "medewerker": $util.dynamodb.toDynamoDBJson($ctx.args.input.medewerker),
     "products": $util.dynamodb.toDynamoDBJson($ctx.args.input.products),
     "services": $util.dynamodb.toDynamoDBJson($ctx.args.input.services),
-    "datum": $util.dynamodb.toDynamoDBJson($ctx.args.input.datum)
+    "datum": $util.dynamodb.toDynamoDBJson($ctx.args.input.datum),
+    "datumOpdracht": $util.dynamodb.toDynamoDBJson($ctx.args.input.datumOpdracht)
   }
 }
 EOF

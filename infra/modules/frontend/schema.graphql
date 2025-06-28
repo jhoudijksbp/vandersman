@@ -1,3 +1,6 @@
+scalar AWSDate
+scalar AWSDateTime
+
 type Query {
   getItem(id: ID!): Item
   listItems: [Item]
@@ -10,51 +13,54 @@ type Mutation {
 
 type Item {
   id: ID!
-  klant: String
-  medewerker: String
-  products: [Product]
-  services: [Service]
-  datum: AWSDateTime
+  klant: String!
+  medewerker: String!
+  datum: AWSDateTime!
+  datumOpdracht: AWSDate!
+  products: [Product!]!
+  services: [Service!]!
 }
 
 input NewItemInput {
   id: ID!
-  klant: String
-  medewerker: String
-  products: [ProductInput]
-  services: [ServiceInput]
-  datum: AWSDateTime
+  klant: String!
+  medewerker: String!
+  datum: AWSDateTime!
+  datumOpdracht: AWSDate!
+  products: [ProductInput!]!
+  services: [ServiceInput!]!
 }
 
 input UpdateItemInput {
   id: ID!
-  klant: String
-  medewerker: String
-  products: [ProductInput]
-  services: [ServiceInput]
-  datum: AWSDateTime
+  klant: String!
+  medewerker: String!
+  datum: AWSDateTime!
+  datumOpdracht: AWSDate!
+  products: [ProductInput!]!
+  services: [ServiceInput!]!
 }
 
 type Product {
-  name: String
-  price: Float
+  name: String!
+  price: Float!
   description: String
 }
 
 type Service {
-  name: String
-  hours: Float
+  name: String!
+  hours: Float!
   description: String
 }
 
 input ProductInput {
-  name: String
-  price: Float
+  name: String!
+  price: Float!
   description: String
 }
 
 input ServiceInput {
-  name: String
-  hours: Float
+  name: String!
+  hours: Float!
   description: String
 }

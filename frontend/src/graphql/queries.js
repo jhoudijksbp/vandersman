@@ -5,6 +5,7 @@ export const listItems = /* GraphQL */ `
       klant
       medewerker
       datum
+      datumOpdracht
       products {
         name
         price
@@ -19,13 +20,14 @@ export const listItems = /* GraphQL */ `
   }
 `;
 
-
 export const addItem = /* GraphQL */ `
   mutation AddItem($input: NewItemInput!) {
     addItem(input: $input) {
       id
       klant
       medewerker
+      datum
+      datumOpdracht
       products {
         name
         price
@@ -47,6 +49,7 @@ export const updateItem = /* GraphQL */ `
       klant
       medewerker
       datum
+      datumOpdracht
       products {
         name
         price
@@ -60,4 +63,3 @@ export const updateItem = /* GraphQL */ `
     }
   }
 `;
-
