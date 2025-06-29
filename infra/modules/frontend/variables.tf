@@ -30,6 +30,12 @@ variable "project_name" {
   description = "The name of the project"
 }
 
+variable "python_version" {
+  type        = string
+  default     = "3.11"
+  description = "The Python version to use for the Lambda function"
+}
+
 variable "region" {
   type        = string
   default     = "us-west-1"
