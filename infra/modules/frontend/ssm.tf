@@ -1,6 +1,6 @@
 resource "aws_ssm_parameter" "rompslomp_token" {
   name  = "/rompslomp/api_token"
-  type  = "String"
+  type  = "SecureString"
   value = "|REDACTED|"
 
   lifecycle {

@@ -4,7 +4,7 @@ python_version = "3.12"
 [packages]
 requests = "*"
 aws-lambda-powertools = "~=2.26.0"
-boto3 = "*"
+boto3 = "1.34.113"
 
 [dev-packages]
 moto = "*"
