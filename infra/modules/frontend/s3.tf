@@ -36,3 +36,32 @@ resource "aws_s3_bucket_policy" "website_policy" {
     ]
   })
 }
+
+resource "aws_s3_bucket" "rompslomp_data" {
+  bucket = replace("${var.project_name}-rompslomp-data", "_", "-")
+
+  tags = {
+    Name        = "rompslomp-data-storage"
+    Environment = "prod"
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "rompslomp_data" {
+  bucket = aws_s3_bucket.rompslomp_data.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "rompslomp_data" {
+  bucket = aws_s3_bucket.rompslomp_data.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}

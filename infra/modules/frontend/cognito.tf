@@ -58,3 +58,22 @@ resource "random_string" "suffix" {
   length  = 5
   special = false
 }
+
+resource "aws_cognito_identity_pool" "main" {
+  identity_pool_name               = "${var.project_name}-identity-pool"
+  allow_unauthenticated_identities = false
+
+  cognito_identity_providers {
+    client_id     = aws_cognito_user_pool_client.react_app.id
+    provider_name = aws_cognito_user_pool.main.endpoint
+  }
+
+}
+
+resource "aws_cognito_identity_pool_roles_attachment" "main" {
+  identity_pool_id = aws_cognito_identity_pool.main.id
+
+  roles = {
+    authenticated = aws_iam_role.cognito_authenticated_role.arn
+  }
+}

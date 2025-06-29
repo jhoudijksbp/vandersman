@@ -1,5 +1,6 @@
-import os
+import boto3
 import requests
+import json
 from aws_lambda_powertools import Logger
 
 logger = Logger(service="rompslomp-api")
@@ -7,48 +8,84 @@ logger = Logger(service="rompslomp-api")
 ROMPSLOMP_TOKEN_URL = "https://api.rompslomp.nl/oauth/token"
 ROMPSLOMP_API_BASE = "https://api.rompslomp.nl/api/v1"
 
+ssm = boto3.client("ssm")
 
-def get_access_token(code: str) -> str:
+
+def get_access_token() -> str:
     try:
-        client_id = os.environ["CLIENT_ID"]
-        client_secret = os.environ["CLIENT_SECRET"]
-        redirect_uri = os.environ["REDIRECT_URI"]
-    except KeyError as e:
-        logger.exception("Missing required environment variable")
-        raise RuntimeError(f"Missing environment variable: {e}")
-
-    payload = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": redirect_uri,
-        "client_id": client_id,
-        "client_secret": client_secret,
-    }
-
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-    logger.info("Requesting access token from Rompslomp")
-    response = requests.post(ROMPSLOMP_TOKEN_URL, data=payload, headers=headers)
-
-    if response.status_code != 200:
-        logger.error(f"Token request failed: {response.text}")
-        raise RuntimeError("Token exchange failed")
-
-    return response.json().get("access_token")
+        api_token = ssm.get_parameter(
+            Name="/rompslomp/api_token",
+            WithDecryption=True,
+        )["Parameter"]["Value"]
+        return api_token
+    except Exception as e:
+        logger.exception("Failed to fetch API token from SSM")
+        raise RuntimeError(f"Missing or inaccessible API token: {e}")
 
 
-def fetch_relaties(access_token: str) -> list:
-    url = f"{ROMPSLOMP_API_BASE}/relaties"
+def fetch_company(access_token: str) -> dict:
+    url = f"{ROMPSLOMP_API_BASE}/companies"
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
     }
 
-    logger.info("Fetching relaties from Rompslomp API")
+    logger.info("Fetching company from Rompslomp")
     response = requests.get(url, headers=headers)
 
     if response.status_code != 200:
-        logger.error(f"Failed to fetch relaties: {response.text}")
-        raise RuntimeError("API call to /relaties failed")
+        logger.error("Failed to fetch company", extra={"response": response.text})
+        raise RuntimeError("API call to /companies failed")
 
-    return response.json()
+    companies = response.json().get("companies", [])
+
+    if not isinstance(companies, list) or len(companies) != 1:
+        logger.error("Expected exactly 1 company", extra={"actual_count": len(companies)})
+        raise RuntimeError("Expected exactly 1 company record")
+
+    logger.info("Company fetched", extra={"company_id": companies[0]['id']})
+    return companies[0]
+
+
+def fetch_paginated_resource(access_token: str, company_id: int, resource: str, per_page: int = 40) -> list:
+    all_items = []
+    page = 1
+
+    while True:
+        url = (
+            f"{ROMPSLOMP_API_BASE}/companies/{company_id}/{resource}"
+            f"?selection=all&page={page}&per_page={per_page}"
+        )
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+        }
+
+        logger.info(f"Fetching {resource} page", extra={"page": page, "company_id": company_id})
+        response = requests.get(url, headers=headers)
+
+        if response.status_code != 200:
+            logger.error(f"Failed to fetch {resource}", extra={"response": response.text})
+            raise RuntimeError(f"API call to /{resource} failed")
+
+        data = response.json()[resource]
+        if not data:
+            break
+
+        all_items.extend(data)
+
+        if len(data) < per_page:
+            break
+
+        page += 1
+
+    logger.info(f"Total {resource} fetched: {len(all_items)}")
+    return all_items
+
+
+def fetch_all_customers_by_company(access_token: str, company: dict) -> list:
+    return fetch_paginated_resource(access_token, company["id"], "contacts")
+
+
+def fetch_all_products_by_company(access_token: str, company: dict) -> list:
+    return fetch_paginated_resource(access_token, company["id"], "products")
