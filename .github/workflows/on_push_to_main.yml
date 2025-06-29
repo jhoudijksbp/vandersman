@@ -35,11 +35,11 @@ jobs:
             frontend:
               - 'frontend/build/**'
 
-      - name: Setup python 3.11.6
+      - name: Setup python 3.12.10
         if: steps.filter.outputs.application_code == 'true' || steps.filter.outputs.libs == 'true'
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11.6"
+          python-version: "3.12.10"
 
       - name: Setup pipenv
         if: steps.filter.outputs.application_code == 'true' || steps.filter.outputs.libs == 'true'
@@ -71,7 +71,7 @@ jobs:
           cat requirement.txt
 
           # Installeer packages in Lambda layer
-          pip install -r requirement.txt --no-deps -t libs/opt/python/lib/python3.11/site-packages
+          pip install -r requirement.txt --no-deps -t libs/opt/python/lib/python3.12/site-packages
 
           # Maak ZIP-bestand
           cd libs/opt
@@ -87,7 +87,6 @@ jobs:
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
           audience: sts.amazonaws.com
           mask-aws-account-id: 'no'
-
 
       - name: Upload function artifact to S3
         if: steps.filter.outputs.application_code == 'true'
