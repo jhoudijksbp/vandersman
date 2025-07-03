@@ -168,7 +168,16 @@ resource "aws_iam_policy" "lambda_policy" {
         ]
         Effect   = "Allow"
         Resource = "arn:aws:logs:*:*:*"
-      }
+      },
+      {
+        Action = [
+          "cognito-idp:ListUsers",
+        ]
+        Effect   = "Allow"
+        Resource = [
+          "*"
+        ]
+      },
     ]
   })
 }
