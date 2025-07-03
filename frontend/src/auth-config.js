@@ -13,6 +13,11 @@ const authConfig = {
         }
       }
     }
+  },
+  App: {
+    identityPoolId: "us-west-1:76cef662-a08c-4f6c-b28b-4ae3d2f1db83",
+    s3Region: "us-west-1",
+    s3Bucket: "vandersman-rompslomp-data"
   }
 };
 

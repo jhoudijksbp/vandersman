@@ -1,43 +1,68 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getCurrentUser, fetchAuthSession } from "aws-amplify/auth";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { generateClient } from "aws-amplify/api";
 import { addItem } from "../graphql/queries";
 import WerkbonForm from "../components/WerkbonForm";
+import { loadJsonFromS3 } from "../utils/s3Loader";
 
 const client = generateClient({ authMode: "userPool" });
 
-const EXAMPLE_PRODUCTS = ["Product A", "Product B"];
-const EXAMPLE_SERVICES = ["Jip Amiabel", "Timo Siebelink"];
-const EXAMPLE_KLANTEN = ["Jan", "Marie"];
-
 function PageAdd() {
-  const [defaultValues, setDefaultValues] = useState(null);
   const navigate = useNavigate();
+  const [defaultValues, setDefaultValues] = useState(null);
+  const [klanten, setKlanten] = useState([]);
+  const [producten, setProducten] = useState([]);
+  const [medewerkers, setMedewerkers] = useState([]);
 
   useEffect(() => {
-    async function fetchUser() {
+    async function fetchInitialData() {
       try {
         const session = await fetchAuthSession();
         const payload = session.tokens?.idToken?.payload;
         const fullName = `${payload.given_name} ${payload.family_name}`;
+
+        const [productenData, klantenData, medewerkersData] = await Promise.all([
+          loadJsonFromS3("rompslomp_products.json"),
+          loadJsonFromS3("rompslomp_contacts.json"),
+          loadJsonFromS3("cognito_medewerkers.json"),
+        ]);
+
         setDefaultValues({
           medewerker: fullName,
           datumOpdracht: new Date().toISOString().split("T")[0],
         });
+
+        setProducten((productenData || []).map((p) => ({
+          id: p.id,
+          name: p.desc,
+          price: p.price_with_vat,
+        })));
+
+        setKlanten((klantenData || []).map((k) => ({
+          id: k.id,
+          name: k.name,
+        })));
+
+        setMedewerkers((medewerkersData || []).map((m) => m.medewerker));
       } catch (error) {
-        console.error("Fout bij ophalen gebruiker:", error);
+        console.error("Fout bij initialisatie:", error);
       }
     }
 
-    fetchUser();
+    fetchInitialData();
   }, []);
 
   const handleSubmit = async (item) => {
     const newItem = {
-      ...item,
       id: Date.now().toString(),
       datum: new Date().toISOString(),
+      datumOpdracht: item.datumOpdracht,
+      klant_id: item.klant_id,
+      klant_naam: item.klant_naam,
+      medewerker: item.medewerker,
+      services: item.services,
+      products: item.products,
     };
 
     try {
@@ -62,10 +87,10 @@ function PageAdd() {
       {defaultValues && (
         <WerkbonForm
           onSubmit={handleSubmit}
-          klanten={EXAMPLE_KLANTEN}
-          medewerkers={[]}
-          productOpties={EXAMPLE_PRODUCTS}
-          serviceOpties={EXAMPLE_SERVICES}
+          klanten={klanten}
+          medewerkers={[]} // nog niet uit JSON
+          productOpties={producten}
+          serviceOpties={medewerkers}
           submitLabel="Voeg werkbon toe"
           initialData={defaultValues}
         />

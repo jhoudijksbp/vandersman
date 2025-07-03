@@ -6,16 +6,12 @@ import awsExports from "../aws-exports";
 import { listItems, updateItem } from "../graphql/queries";
 import WerkbonForm from "../components/WerkbonForm";
 import WerkbonPDFView from "../components/WerkbonPDFView";
-import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { loadJsonFromS3 } from "../utils/s3Loader";
 
 Amplify.configure(awsExports);
 const client = generateClient({ authMode: "userPool" });
-
-const EXAMPLE_PRODUCTS = ["Product A", "Product B"];
-const EXAMPLE_SERVICES = ["Jip Amiabel", "Timo Siebelink"];
-const EXAMPLE_MEDEWERKERS = ["Piet", "Klaas"];
-const EXAMPLE_KLANTEN = ["Jan", "Marie"];
 
 function PageEdit() {
   const location = useLocation();
@@ -28,11 +24,35 @@ function PageEdit() {
   const [editingItem, setEditingItem] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: "datum", direction: "desc" });
   const [currentPage, setCurrentPage] = useState(1);
+  const [klanten, setKlanten] = useState([]);
+  const [producten, setProducten] = useState([]);
+  const [medewerkers, setMedewerkers] = useState([]);
   const itemsPerPage = 5;
 
   useEffect(() => {
     fetchItems();
+    fetchS3Data();
   }, []);
+
+  const fetchS3Data = async () => {
+    try {
+      const [productData, klantData, medewerkerData] = await Promise.all([
+        loadJsonFromS3("rompslomp_products.json"),
+        loadJsonFromS3("rompslomp_contacts.json"),
+        loadJsonFromS3("cognito_medewerkers.json")
+      ]);
+
+      setMedewerkers((medewerkerData || []).map((m) => m.medewerker));
+      setKlanten((klantData || []).map(k => ({ id: k.id, name: k.name })));
+      setProducten((productData || []).map(p => ({
+        id: p.id,
+        name: p.desc,
+        price: p.price_with_vat
+      })));
+    } catch (err) {
+      console.error("Fout bij laden van S3-data:", err);
+    }
+  };
 
   useEffect(() => {
     if (successMessage || errorMessage) {
@@ -59,10 +79,25 @@ function PageEdit() {
 
   const handleUpdate = async (item) => {
     const updatedItem = {
-      ...item,
+      id: item.id,
       datum: new Date().toISOString(),
-      ...(item.datumOpdracht && { datumOpdracht: item.datumOpdracht }),
+      datumOpdracht: item.datumOpdracht,
+      klant_id: item.klant?.id,
+      klant_naam: item.klant?.name,
+      medewerker: item.medewerker,
+      services: item.services.map((s) => ({
+        name: s.name,
+        hours: s.hours,
+        description: s.description,
+      })),
+      products: item.products.map((p) => ({
+        id: p.product_id,
+        name: p.name,
+        price: p.price,
+        description: p.description,
+      })),
     };
+
     try {
       await client.graphql({
         query: updateItem,
@@ -78,6 +113,7 @@ function PageEdit() {
       setSuccessMessage(null);
     }
   };
+
 
   const handleDownloadPDF = async () => {
     const input = pdfRef.current;
@@ -155,7 +191,7 @@ function PageEdit() {
                   <th className="border px-3 py-2 cursor-pointer" onClick={() => handleSort("datumOpdracht")}>
                     Opdracht datum
                   </th>
-                  <th className="border px-3 py-2 cursor-pointer" onClick={() => handleSort("klant")}>
+                  <th className="border px-3 py-2 cursor-pointer" onClick={() => handleSort("klant_naam")}>
                     Klant
                   </th>
                   <th className="border px-3 py-2 cursor-pointer" onClick={() => handleSort("medewerker")}>
@@ -181,7 +217,7 @@ function PageEdit() {
                         ? new Date(item.datumOpdracht).toLocaleDateString("nl-NL")
                         : "-"}
                     </td>
-                    <td className="border px-3 py-2">{item.klant}</td>
+                    <td className="border px-3 py-2">{item.klant_naam}</td>
                     <td className="border px-3 py-2">{item.medewerker}</td>
                     <td className="border px-3 py-2 text-center">
                       <button
@@ -230,18 +266,28 @@ function PageEdit() {
             </button>
           </div>
 
-          {/* Formulier op het scherm */}
           <WerkbonForm
-            initialData={editingItem}
+            initialData={{
+              ...editingItem,
+              klant: {
+                id: editingItem.klant_id,
+                name: editingItem.klant_naam,
+              },
+              products: (editingItem.products || []).map((p) => ({
+                name: p.name,
+                price: p.price,
+                description: p.description,
+                product_id: p.id,
+              })),
+            }}
             onSubmit={handleUpdate}
-            klanten={EXAMPLE_KLANTEN}
-            medewerkers={EXAMPLE_MEDEWERKERS}
-            productOpties={EXAMPLE_PRODUCTS}
-            serviceOpties={EXAMPLE_SERVICES}
+            klanten={klanten}
+            medewerkers={medewerkers} // kun je zelf uitbreiden als je wilt
+            productOpties={producten}
+            serviceOpties={medewerkers}
             submitLabel="Werkbon opslaan"
           />
 
-          {/* Onzichtbare PDF-weergave */}
           <div className="absolute left-[-9999px] top-0">
             <div ref={pdfRef}>
               <WerkbonPDFView data={editingItem} />

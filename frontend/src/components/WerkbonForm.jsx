@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
-import SignatureCanvas from "react-signature-canvas";
+import React, { useEffect, useState } from "react";
 
 function WerkbonForm({
   initialData = {},
@@ -12,7 +11,7 @@ function WerkbonForm({
   signatureRef,
 }) {
   const [formRows, setFormRows] = useState([]);
-  const [medewerker, setMedewerker] = useState(initialData.medewerker || "");
+  const [medewerker] = useState(initialData.medewerker || "");
   const [klant, setKlant] = useState(initialData.klant || "");
   const [datumOpdracht, setDatumOpdracht] = useState(
     initialData.datumOpdracht || new Date().toISOString().split("T")[0]
@@ -49,6 +48,7 @@ function WerkbonForm({
         hours: "",
         price: "",
         description: "",
+        product_id: "",
       },
     ]);
   };
@@ -124,6 +124,7 @@ function WerkbonForm({
     const products = formRows
       .filter((row) => row.type === "Product")
       .map((row) => ({
+        id: row.product_id,
         name: row.name,
         price: parseFloat((row.price || "").toString().replace(",", ".")),
         description: row.description,
@@ -132,12 +133,12 @@ function WerkbonForm({
     const item = {
       ...initialData,
       datumOpdracht,
-      klant,
+      klant_id: klant?.id,
+      klant_naam: klant?.name,
       medewerker,
       services,
       products,
     };
-
     onSubmit(item);
   };
 
@@ -167,14 +168,17 @@ function WerkbonForm({
         <div>
           <label className="block text-sm font-medium text-gray-700">Klant</label>
           <select
-            value={klant}
-            onChange={(e) => setKlant(e.target.value)}
+            value={klant?.id || ""}
+            onChange={(e) => {
+              const selected = klanten.find(k => k.id.toString() === e.target.value);
+              setKlant(selected || "");
+            }}
             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:border-jordygroen focus:ring-jordygroen"
           >
             <option value="">Selecteer...</option>
             {klanten.map((k) => (
-              <option key={k} value={k}>
-                {k}
+              <option key={k.id} value={k.id}>
+                {k.name}
               </option>
             ))}
           </select>
@@ -225,18 +229,35 @@ function WerkbonForm({
               <tr key={row.id} className="hover:bg-gray-50">
                 <td className="border px-3 py-2">{row.type}</td>
                 <td className="border px-3 py-2">
-                  <select
-                    value={row.name}
-                    onChange={(e) => updateRow(row.id, "name", e.target.value)}
-                    className="w-full border rounded p-1"
-                  >
-                    <option value="">Selecteer...</option>
-                    {(row.type === "Service" ? serviceOpties : productOpties).map((opt) => (
+                <select
+                  value={row.name}
+                  onChange={(e) => {
+                    const selectedValue = e.target.value;
+
+                    if (row.type === "Product") {
+                      const selected = productOpties.find(p => p.name === selectedValue);
+                      updateRow(row.id, "name", selected?.name || "");
+                      updateRow(row.id, "price", selected?.price || "");
+                      updateRow(row.id, "product_id", selected?.id || "");
+                    } else {
+                      updateRow(row.id, "name", selectedValue);
+                    }
+                  }}
+                  className="w-full border rounded p-1"
+                >
+                  <option value="">Selecteer...</option>
+                  {(row.type === "Service" ? serviceOpties : productOpties).map((opt) =>
+                    typeof opt === "string" ? (
                       <option key={opt} value={opt}>
                         {opt}
                       </option>
-                    ))}
-                  </select>
+                    ) : (
+                      <option key={opt.id} value={opt.name}>
+                        {opt.name}
+                      </option>
+                    )
+                  )}
+                </select>
                 </td>
                 <td className="border px-3 py-2">
                   {row.type === "Service" ? (
@@ -254,7 +275,7 @@ function WerkbonForm({
                   {row.type === "Product" ? (
                     <input
                       type="text"
-                      value={row.price}
+                      value={row.price ?? ""}
                       onChange={(e) => updateRow(row.id, "price", e.target.value)}
                       className="w-full border rounded p-1"
                       placeholder="Bijv. 12,50"

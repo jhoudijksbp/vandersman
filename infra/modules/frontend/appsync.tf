@@ -65,7 +65,8 @@ resource "aws_appsync_resolver" "add_item" {
     "id" : $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
   },
   "attributeValues" : {
-    "klant": $util.dynamodb.toDynamoDBJson($ctx.args.input.klant),
+    "klant_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.klant_id),
+    "klant_naam": $util.dynamodb.toDynamoDBJson($ctx.args.input.klant_naam),
     "medewerker": $util.dynamodb.toDynamoDBJson($ctx.args.input.medewerker),
     "products": $util.dynamodb.toDynamoDBJson($ctx.args.input.products),
     "services": $util.dynamodb.toDynamoDBJson($ctx.args.input.services),
@@ -116,7 +117,8 @@ resource "aws_appsync_resolver" "update_item" {
     "id" : $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
   },
   "attributeValues" : {
-    "klant": $util.dynamodb.toDynamoDBJson($ctx.args.input.klant),
+    "klant_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.klant_id),
+    "klant_naam": $util.dynamodb.toDynamoDBJson($ctx.args.input.klant_naam),
     "medewerker": $util.dynamodb.toDynamoDBJson($ctx.args.input.medewerker),
     "products": $util.dynamodb.toDynamoDBJson($ctx.args.input.products),
     "services": $util.dynamodb.toDynamoDBJson($ctx.args.input.services),

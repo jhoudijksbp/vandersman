@@ -13,7 +13,8 @@ type Mutation {
 
 type Item {
   id: ID!
-  klant: String!
+  klant_id: ID
+  klant_naam: String
   medewerker: String!
   datum: AWSDateTime!
   datumOpdracht: AWSDate!
@@ -21,27 +22,8 @@ type Item {
   services: [Service!]!
 }
 
-input NewItemInput {
-  id: ID!
-  klant: String!
-  medewerker: String!
-  datum: AWSDateTime!
-  datumOpdracht: AWSDate!
-  products: [ProductInput!]!
-  services: [ServiceInput!]!
-}
-
-input UpdateItemInput {
-  id: ID!
-  klant: String!
-  medewerker: String!
-  datum: AWSDateTime!
-  datumOpdracht: AWSDate!
-  products: [ProductInput!]!
-  services: [ServiceInput!]!
-}
-
 type Product {
+  id: ID
   name: String!
   price: Float!
   description: String
@@ -53,7 +35,30 @@ type Service {
   description: String
 }
 
+input NewItemInput {
+  id: ID!
+  klant_id: ID
+  klant_naam: String
+  medewerker: String!
+  datum: AWSDateTime!
+  datumOpdracht: AWSDate!
+  products: [ProductInput!]!
+  services: [ServiceInput!]!
+}
+
+input UpdateItemInput {
+  id: ID!
+  klant_id: ID
+  klant_naam: String
+  medewerker: String!
+  datum: AWSDateTime!
+  datumOpdracht: AWSDate!
+  products: [ProductInput!]!
+  services: [ServiceInput!]!
+}
+
 input ProductInput {
+  id: ID
   name: String!
   price: Float!
   description: String

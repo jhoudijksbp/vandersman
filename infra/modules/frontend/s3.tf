@@ -65,3 +65,18 @@ resource "aws_s3_bucket_public_access_block" "rompslomp_data" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+resource "aws_s3_bucket_cors_configuration" "rompslomp_data" {
+  bucket = aws_s3_bucket.rompslomp_data.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = [
+      "http://localhost:3000",
+      "http://${aws_s3_bucket_website_configuration.frontend_website_config.website_endpoint}",
+    ]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
