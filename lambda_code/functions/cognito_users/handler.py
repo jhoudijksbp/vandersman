@@ -1,7 +1,7 @@
 import os
 import json
 from aws_lambda_powertools import Logger
-from utils import fetch_cognito_users, upload_to_s3
+from lambda_code.functions.cognito_users.utils import fetch_cognito_users, upload_to_s3
 
 logger = Logger()
 USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID")
