@@ -40,3 +40,19 @@ resource "aws_lambda_function" "get_cognito_users_lambda" {
 
   layers = [var.lambda_layer_arn]
 }
+
+resource "aws_lambda_permission" "allow_appsync_invoke_rompslomp_lambda" {
+  statement_id  = "AllowAppSyncInvokeRompslomp"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.rompslomp_integrator_lambda.function_name
+  principal     = "appsync.amazonaws.com"
+  source_arn    = aws_appsync_graphql_api.appsync_api.arn
+}
+
+resource "aws_lambda_permission" "allow_appsync_invoke_cognito_lambda" {
+  statement_id  = "AllowAppSyncInvokeCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_cognito_users_lambda.function_name
+  principal     = "appsync.amazonaws.com"
+  source_arn    = aws_appsync_graphql_api.appsync_api.arn
+}

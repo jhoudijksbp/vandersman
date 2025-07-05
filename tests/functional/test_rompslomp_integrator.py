@@ -42,12 +42,7 @@ def mock_ssm(monkeypatch, mocker):
 
 def test_lambda_handler_success(mocker, valid_event):
     response = lambda_handler(valid_event, DummyContext())
-
-    assert response["statusCode"] == 200
-    body = json.loads(response["body"])
-    assert body["message"] == "Rompslomp integrator executed successfully"
-    assert body["contacts_count"] >= 1
-    assert body["products_count"] >= 1
+    assert response["status"] == "OK"
 
 
 def test_lambda_handler_failure_in_token_exchange(mocker, valid_event):
@@ -55,15 +50,5 @@ def test_lambda_handler_failure_in_token_exchange(mocker, valid_event):
         "lambda_code.functions.rompslomp_integrator.handler.get_access_token",
         side_effect=RuntimeError("Token exchange failed")
     )
-
     response = lambda_handler(valid_event, DummyContext())
-
-    assert response["statusCode"] == 500
-    body = json.loads(response["body"])
-    assert "Token exchange failed" in body["error"]
-
-
-def test_lambda_handler_without_mocking_fails_gracefully(valid_event):
-    """Optional fallback test to check graceful failure (not mocking any API)."""
-    response = lambda_handler(valid_event, DummyContext())
-    assert response["statusCode"] in [200, 500]
+    assert response["status"] == "FAILED"

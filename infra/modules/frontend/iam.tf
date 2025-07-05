@@ -52,24 +52,36 @@ resource "aws_iam_role" "appsync_role" {
 }
 
 resource "aws_iam_role_policy" "appsync_policy" {
-  name = "appsync-dynamo-access"
+  name = "appsync-dynamo-lambda-access"
   role = aws_iam_role.appsync_role.id
 
-    policy = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-        {
+      {
+        Sid    = "DynamoDBAccess",
+        Effect = "Allow",
         Action = [
-            "dynamodb:GetItem",
-            "dynamodb:Query",
-            "dynamodb:Scan",
-            "dynamodb:PutItem"
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:PutItem"
         ],
-        Effect   = "Allow",
         Resource = var.werkbon_dynamodb_table.arn
-        }
+      },
+      {
+        Sid    = "LambdaInvokeAccess",
+        Effect = "Allow",
+        Action = [
+          "lambda:InvokeFunction"
+        ],
+        Resource = [
+          aws_lambda_function.rompslomp_integrator_lambda.arn,
+          aws_lambda_function.get_cognito_users_lambda.arn
+        ]
+      }
     ]
-    })
+  })
 }
 
 resource "aws_iam_policy" "rompslomp_s3_readonly" {
@@ -122,7 +134,6 @@ resource "aws_iam_role_policy_attachment" "attach_readonly_policy" {
   role       = aws_iam_role.cognito_authenticated_role.name
   policy_arn = aws_iam_policy.rompslomp_s3_readonly.arn
 }
-
 
 # ✅ IAM Role for Lambda Functions
 resource "aws_iam_role" "lambda_role" {

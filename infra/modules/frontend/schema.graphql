@@ -9,6 +9,8 @@ type Query {
 type Mutation {
   addItem(input: NewItemInput!): Item
   updateItem(input: UpdateItemInput!): Item
+  triggerGetCognitoJob: TriggerJobResult
+  triggerRomsplompDataJob: TriggerJobResult
 }
 
 type Item {
@@ -68,4 +70,9 @@ input ServiceInput {
   name: String!
   hours: Float!
   description: String
+}
+
+type TriggerJobResult {
+  status: String!
+  message: String
 }

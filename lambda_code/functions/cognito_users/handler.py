@@ -17,6 +17,6 @@ def lambda_handler(event, context):
     logger.info(f"Gegevens opgeslagen in S3: s3://{S3_BUCKET_NAME}/{S3_KEY}")
 
     return {
-        "statusCode": 200,
-        "body": json.dumps(users)
+        "status": "OK",
+        "message": "GetCognitoUsers integrator executed successfully"
     }

@@ -62,19 +62,13 @@ def lambda_handler(event: dict, context: LambdaContext) -> dict:
         contacts_key, products_key = store_data_to_s3(contacts, products)
 
         return {
-            "statusCode": 200,
-            "body": json.dumps({
-                "message": "Rompslomp integrator executed successfully",
-                "contacts_count": len(contacts),
-                "products_count": len(products),
-                "contacts_s3_key": contacts_key,
-                "products_s3_key": products_key,
-            }),
+            "status": "OK",
+            "message": "Rompslomp integrator executed successfully"
         }
 
     except Exception as e:
-        logger.exception("Error during Rompslomp integration flow")
+        logger.exception(f"Error during Rompslomp integration flow: {str(e)}")
         return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e)}),
+            "status": "FAILED",
+            "message": "Rompslomp integrator FAILED"
         }

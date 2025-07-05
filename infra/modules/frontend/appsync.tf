@@ -136,3 +136,63 @@ EOF
     aws_appsync_graphql_api.appsync_api
   ]
 }
+
+resource "aws_appsync_datasource" "lambda_trigger_rompslomp_job" {
+  api_id           = aws_appsync_graphql_api.appsync_api.id
+  name             = "RompslompDataDatasource"
+  type             = "AWS_LAMBDA"
+  service_role_arn = aws_iam_role.appsync_role.arn
+
+  lambda_config {
+    function_arn = aws_lambda_function.rompslomp_integrator_lambda.arn
+  }
+}
+
+resource "aws_appsync_datasource" "lambda_trigger_cognito_job" {
+  api_id           = aws_appsync_graphql_api.appsync_api.id
+  name             = "CognitoUsersDatasource"
+  type             = "AWS_LAMBDA"
+  service_role_arn = aws_iam_role.appsync_role.arn
+
+  lambda_config {
+    function_arn = aws_lambda_function.get_cognito_users_lambda.arn
+  }
+}
+
+resource "aws_appsync_resolver" "trigger_job_rompslomp_data" {
+  api_id      = aws_appsync_graphql_api.appsync_api.id
+  type        = "Mutation"
+  field       = "triggerRomsplompDataJob"
+  data_source = aws_appsync_datasource.lambda_trigger_rompslomp_job.name
+
+  request_template = <<EOF
+{
+  "version": "2018-05-29",
+  "operation": "Invoke",
+  "payload": {}
+}
+EOF
+ 
+  response_template = <<EOF
+$util.toJson($ctx.result)
+EOF
+}
+
+resource "aws_appsync_resolver" "trigger_job_cognito_users" {
+  api_id      = aws_appsync_graphql_api.appsync_api.id
+  type        = "Mutation"
+  field       = "triggerGetCognitoJob"
+  data_source = aws_appsync_datasource.lambda_trigger_cognito_job.name
+
+  request_template = <<EOF
+{
+  "version": "2018-05-29",
+  "operation": "Invoke",
+  "payload": {}
+}
+EOF
+
+  response_template = <<EOF
+$util.toJson($ctx.result)
+EOF
+}
