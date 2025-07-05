@@ -13,7 +13,7 @@ import { loadJsonFromS3 } from "../utils/s3Loader";
 Amplify.configure(awsExports);
 const client = generateClient({ authMode: "userPool" });
 
-function PageEdit() {
+function PageEdit({ refreshToken }) {
   const location = useLocation();
   const pdfRef = useRef();
 
@@ -32,7 +32,7 @@ function PageEdit() {
   useEffect(() => {
     fetchItems();
     fetchS3Data();
-  }, []);
+  }, [refreshToken]); // <-- herlaad S3-data bij token
 
   const fetchS3Data = async () => {
     try {
@@ -113,7 +113,6 @@ function PageEdit() {
       setSuccessMessage(null);
     }
   };
-
 
   const handleDownloadPDF = async () => {
     const input = pdfRef.current;
@@ -282,7 +281,7 @@ function PageEdit() {
             }}
             onSubmit={handleUpdate}
             klanten={klanten}
-            medewerkers={medewerkers} // kun je zelf uitbreiden als je wilt
+            medewerkers={medewerkers}
             productOpties={producten}
             serviceOpties={medewerkers}
             submitLabel="Werkbon opslaan"

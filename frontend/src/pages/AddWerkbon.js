@@ -8,7 +8,7 @@ import { loadJsonFromS3 } from "../utils/s3Loader";
 
 const client = generateClient({ authMode: "userPool" });
 
-function PageAdd() {
+function PageAdd({ refreshToken }) {
   const navigate = useNavigate();
   const [defaultValues, setDefaultValues] = useState(null);
   const [klanten, setKlanten] = useState([]);
@@ -51,7 +51,7 @@ function PageAdd() {
     }
 
     fetchInitialData();
-  }, []);
+  }, [refreshToken]); // <-- herlaad bij wijziging
 
   const handleSubmit = async (item) => {
     const newItem = {

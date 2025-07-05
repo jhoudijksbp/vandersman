@@ -69,3 +69,16 @@ export const updateItem = /* GraphQL */ `
     }
   }
 `;
+
+export const triggerDataJobs = /* GraphQL */ `
+  mutation TriggerDataJobs {
+    triggerGetCognitoJob {
+      message
+      status
+    }
+    triggerRomsplompDataJob {
+      message
+      status
+    }
+  }
+`;
