@@ -36,7 +36,7 @@ def fetch_cognito_users(user_pool_id):
         pagination_token = response.get("PaginationToken")
         if not pagination_token:
             break
-
+    users.sort(key=lambda u: u["medewerker"].lower())
     return users
 
 def upload_to_s3(data, bucket_name, key):

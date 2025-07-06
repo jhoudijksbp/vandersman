@@ -44,8 +44,12 @@ def fetch_and_transform_products(access_token: str, company: dict) -> list[dict]
 
 
 def store_data_to_s3(contacts: list[dict], products: list[dict]) -> tuple[str, str]:
-    contacts_key = write_json_to_s3(contacts, S3_BUCKET, "rompslomp_contacts")
-    products_key = write_json_to_s3(products, S3_BUCKET, "rompslomp_products")
+    # Sorteer de lijsten vóór het schrijven
+    sorted_contacts = sorted(contacts, key=lambda c: c["name"].lower() if c["name"] else "")
+    sorted_products = sorted(products, key=lambda p: p["desc"].lower() if p["desc"] else "")
+
+    contacts_key = write_json_to_s3(sorted_contacts, S3_BUCKET, "rompslomp_contacts")
+    products_key = write_json_to_s3(sorted_products, S3_BUCKET, "rompslomp_products")
     return contacts_key, products_key
 
 
