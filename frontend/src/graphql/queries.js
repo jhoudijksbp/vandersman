@@ -1,6 +1,6 @@
 export const listItems = /* GraphQL */ `
-  query ListItems {
-    listItems {
+  query ListItems($from: AWSDateTime!, $to: AWSDateTime!) {
+    listItems(from: $from, to: $to) {
       id
       klant_id
       klant_naam
@@ -12,6 +12,32 @@ export const listItems = /* GraphQL */ `
         name
         price
         description
+        quantity
+      }
+      services {
+        name
+        hours
+        description
+      }
+    }
+  }
+`;
+
+export const listItemsByKlant = /* GraphQL */ `
+  query ListItemsByKlant($klant_id: ID!) {
+    listItemsByKlant(klant_id: $klant_id) {
+      id
+      klant_id
+      klant_naam
+      medewerker
+      datum
+      datumOpdracht
+      products {
+        id
+        name
+        price
+        description
+        quantity
       }
       services {
         name
@@ -31,11 +57,13 @@ export const addItem = /* GraphQL */ `
       medewerker
       datum
       datumOpdracht
+      dummy
       products {
         id
         name
         price
         description
+        quantity
       }
       services {
         name
@@ -55,11 +83,13 @@ export const updateItem = /* GraphQL */ `
       medewerker
       datum
       datumOpdracht
+      dummy
       products {
         id
         name
         price
         description
+        quantity
       }
       services {
         name

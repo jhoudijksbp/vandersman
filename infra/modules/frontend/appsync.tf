@@ -71,7 +71,8 @@ resource "aws_appsync_resolver" "add_item" {
     "products": $util.dynamodb.toDynamoDBJson($ctx.args.input.products),
     "services": $util.dynamodb.toDynamoDBJson($ctx.args.input.services),
     "datum": $util.dynamodb.toDynamoDBJson($ctx.args.input.datum),
-    "datumOpdracht": $util.dynamodb.toDynamoDBJson($ctx.args.input.datumOpdracht)
+    "datumOpdracht": $util.dynamodb.toDynamoDBJson($ctx.args.input.datumOpdracht),
+    "dummy": $util.dynamodb.toDynamoDBJson($ctx.args.input.dummy)
   }
 }
 EOF
@@ -83,24 +84,6 @@ EOF
   depends_on = [
     aws_appsync_graphql_api.appsync_api
   ]
-}
-
-resource "aws_appsync_resolver" "list_items" {
-  api_id          = aws_appsync_graphql_api.appsync_api.id
-  type            = "Query"
-  field           = "listItems"
-  data_source     = aws_appsync_datasource.dynamodb.name
-
-  request_template = <<EOF
-{
-  "version": "2018-05-29",
-  "operation": "Scan"
-}
-EOF
-
-  response_template = <<EOF
-$util.toJson($ctx.result.items)
-EOF
 }
 
 resource "aws_appsync_resolver" "update_item" {
@@ -123,7 +106,8 @@ resource "aws_appsync_resolver" "update_item" {
     "products": $util.dynamodb.toDynamoDBJson($ctx.args.input.products),
     "services": $util.dynamodb.toDynamoDBJson($ctx.args.input.services),
     "datum": $util.dynamodb.toDynamoDBJson($ctx.args.input.datum),
-    "datumOpdracht": $util.dynamodb.toDynamoDBJson($ctx.args.input.datumOpdracht)
+    "datumOpdracht": $util.dynamodb.toDynamoDBJson($ctx.args.input.datumOpdracht),
+    "dummy": $util.dynamodb.toDynamoDBJson($ctx.args.input.dummy)
   }
 }
 EOF
@@ -135,6 +119,66 @@ EOF
   depends_on = [
     aws_appsync_graphql_api.appsync_api
   ]
+}
+
+resource "aws_appsync_resolver" "list_items" {
+  api_id      = aws_appsync_graphql_api.appsync_api.id
+  type        = "Query"
+  field       = "listItems"
+  data_source = aws_appsync_datasource.dynamodb.name
+
+  request_template = <<EOF
+{
+  "version": "2018-05-29",
+  "operation": "Query",
+  "index": "datum-index",
+  "query": {
+    "expression": "#dummy = :dummy AND #datum BETWEEN :from AND :to",
+    "expressionNames": {
+      "#dummy": "dummy",
+      "#datum": "datum"
+    },
+    "expressionValues": {
+      ":dummy": { "S": "werkbon" },
+      ":from": { "S": "$ctx.args.from" },
+      ":to": { "S": "$ctx.args.to" }
+    }
+  }
+}
+EOF
+
+  response_template = <<EOF
+$util.toJson($ctx.result.items)
+EOF
+}
+
+resource "aws_appsync_resolver" "list_items_by_klant" {
+  api_id      = aws_appsync_graphql_api.appsync_api.id
+  type        = "Query"
+  field       = "listItemsByKlant"
+  data_source = aws_appsync_datasource.dynamodb.name
+
+  request_template = <<EOF
+{
+  "version": "2018-05-29",
+  "operation": "Query",
+  "index": "klant-index",
+  "query": {
+    "expression": "#klant_id = :klant_id",
+    "expressionNames": {
+      "#klant_id": "klant_id"
+    },
+    "expressionValues": {
+      ":klant_id": { "S": "$ctx.args.klant_id" }
+    }
+  },
+  "scanIndexForward": false
+}
+EOF
+
+  response_template = <<EOF
+$util.toJson($ctx.result.items)
+EOF
 }
 
 resource "aws_appsync_datasource" "lambda_trigger_rompslomp_job" {

@@ -3,12 +3,13 @@ import { useLocation } from "react-router-dom";
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/api";
 import awsExports from "../aws-exports";
-import { listItems, updateItem } from "../graphql/queries";
+import { listItems, listItemsByKlant, updateItem } from "../graphql/queries";
 import WerkbonForm from "../components/WerkbonForm";
 import WerkbonPDFView from "../components/WerkbonPDFView";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { loadJsonFromS3 } from "../utils/s3Loader";
+import Select from "react-select";
 
 Amplify.configure(awsExports);
 const client = generateClient({ authMode: "userPool" });
@@ -27,32 +28,17 @@ function PageEdit({ refreshToken }) {
   const [klanten, setKlanten] = useState([]);
   const [producten, setProducten] = useState([]);
   const [medewerkers, setMedewerkers] = useState([]);
+  const [klantId, setKlantId] = useState("");
   const itemsPerPage = 5;
 
   useEffect(() => {
-    fetchItems();
+    if (!klantId) fetchItems();
     fetchS3Data();
-  }, [refreshToken]); // <-- herlaad S3-data bij token
+  }, [refreshToken]);
 
-  const fetchS3Data = async () => {
-    try {
-      const [productData, klantData, medewerkerData] = await Promise.all([
-        loadJsonFromS3("rompslomp_products.json"),
-        loadJsonFromS3("rompslomp_contacts.json"),
-        loadJsonFromS3("cognito_medewerkers.json")
-      ]);
-
-      setMedewerkers((medewerkerData || []).map((m) => m.medewerker));
-      setKlanten((klantData || []).map(k => ({ id: k.id, name: k.name })));
-      setProducten((productData || []).map(p => ({
-        id: p.id,
-        name: p.desc,
-        price: p.price_with_vat
-      })));
-    } catch (err) {
-      console.error("Fout bij laden van S3-data:", err);
-    }
-  };
+  useEffect(() => {
+    fetchItems();
+  }, [klantId]);
 
   useEffect(() => {
     if (successMessage || errorMessage) {
@@ -64,12 +50,50 @@ function PageEdit({ refreshToken }) {
     }
   }, [successMessage, errorMessage]);
 
+  const fetchS3Data = async () => {
+    try {
+      const [productData, klantData, medewerkerData] = await Promise.all([
+        loadJsonFromS3("rompslomp_products.json"),
+        loadJsonFromS3("rompslomp_contacts.json"),
+        loadJsonFromS3("cognito_medewerkers.json"),
+      ]);
+
+      setMedewerkers((medewerkerData || []).map((m) => m.medewerker));
+      setKlanten((klantData || []).map((k) => ({ id: k.id, name: k.name })));
+      setProducten((productData || []).map((p) => ({
+        id: p.id,
+        name: p.desc,
+        price: p.price_with_vat,
+        quantity: 1,
+      })));
+    } catch (err) {
+      console.error("Fout bij laden van S3-data:", err);
+    }
+  };
+
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const result = await client.graphql({ query: listItems });
-      const itemsList = result.data?.listItems || [];
-      setItems(itemsList);
+      let result;
+      if (klantId) {
+        result = await client.graphql({
+          query: listItemsByKlant,
+          variables: { klant_id: klantId },
+        });
+        setItems(result.data?.listItemsByKlant || []);
+      } else {
+        const today = new Date();
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(today.getMonth() - 3);
+        const from = threeMonthsAgo.toISOString();
+        const to = today.toISOString();
+
+        result = await client.graphql({
+          query: listItems,
+          variables: { from, to },
+        });
+        setItems(result.data?.listItems || []);
+      }
     } catch (err) {
       console.error("Fout bij ophalen:", err);
     } finally {
@@ -95,7 +119,9 @@ function PageEdit({ refreshToken }) {
         name: p.name,
         price: p.price,
         description: p.description,
+        quantity: p.quantity,
       })),
+      dummy: item.dummy || "werkbon",
     };
 
     try {
@@ -159,6 +185,11 @@ function PageEdit({ refreshToken }) {
     });
   };
 
+  const klantOpties = klanten.map((k) => ({
+    value: k.id,
+    label: k.name,
+  }));
+
   const totalPages = Math.ceil(items.length / itemsPerPage);
 
   return (
@@ -175,6 +206,17 @@ function PageEdit({ refreshToken }) {
       )}
 
       <h2 className="text-xl font-semibold text-jordygroen mb-4">Werkbonnen</h2>
+
+      <div className="mb-4">
+        <label className="block mb-1 text-sm font-medium">Filter op klant</label>
+        <Select
+          options={[{ value: "", label: "-- Toon alles --" }, ...klantOpties]}
+          value={klantOpties.find((opt) => opt.value === klantId) || { value: "", label: "-- Toon alles --" }}
+          onChange={(selected) => setKlantId(selected.value)}
+          className="react-select-container"
+          classNamePrefix="react-select"
+        />
+      </div>
 
       {loading ? (
         <p className="text-gray-500">Laden...</p>
@@ -277,6 +319,7 @@ function PageEdit({ refreshToken }) {
                 price: p.price,
                 description: p.description,
                 product_id: p.id,
+                quantity: p.quantity ?? 1,
               })),
             }}
             onSubmit={handleUpdate}

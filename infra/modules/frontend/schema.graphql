@@ -3,7 +3,8 @@ scalar AWSDateTime
 
 type Query {
   getItem(id: ID!): Item
-  listItems: [Item]
+  listItems(from: AWSDateTime!, to: AWSDateTime!): [Item]
+  listItemsByKlant(klant_id: ID!): [Item]
 }
 
 type Mutation {
@@ -20,6 +21,7 @@ type Item {
   medewerker: String!
   datum: AWSDateTime!
   datumOpdracht: AWSDate!
+  dummy: String!
   products: [Product!]!
   services: [Service!]!
 }
@@ -29,6 +31,7 @@ type Product {
   name: String!
   price: Float!
   description: String
+  quantity: Int!
 }
 
 type Service {
@@ -44,6 +47,7 @@ input NewItemInput {
   medewerker: String!
   datum: AWSDateTime!
   datumOpdracht: AWSDate!
+  dummy: String!
   products: [ProductInput!]!
   services: [ServiceInput!]!
 }
@@ -55,6 +59,7 @@ input UpdateItemInput {
   medewerker: String!
   datum: AWSDateTime!
   datumOpdracht: AWSDate!
+  dummy: String!
   products: [ProductInput!]!
   services: [ServiceInput!]!
 }
@@ -64,6 +69,7 @@ input ProductInput {
   name: String!
   price: Float!
   description: String
+  quantity: Int!
 }
 
 input ServiceInput {

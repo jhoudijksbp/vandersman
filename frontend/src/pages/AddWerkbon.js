@@ -37,6 +37,7 @@ function PageAdd({ refreshToken }) {
           id: p.id,
           name: p.desc,
           price: p.price_with_vat,
+          quantity: 1,
         })));
 
         setKlanten((klantenData || []).map((k) => ({
@@ -63,6 +64,7 @@ function PageAdd({ refreshToken }) {
       medewerker: item.medewerker,
       services: item.services,
       products: item.products,
+      dummy: "werkbon",
     };
 
     try {
@@ -82,7 +84,7 @@ function PageAdd({ refreshToken }) {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow max-w-3xl mx-auto">
+    <div className="bg-white p-4 rounded-lg shadow max-w-screen-xl mx-auto">
       <h2 className="text-xl font-semibold text-jordygroen mb-4">Nieuwe werkbon</h2>
       {defaultValues && (
         <WerkbonForm

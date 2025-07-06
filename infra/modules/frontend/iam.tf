@@ -67,7 +67,11 @@ resource "aws_iam_role_policy" "appsync_policy" {
           "dynamodb:Scan",
           "dynamodb:PutItem"
         ],
-        Resource = var.werkbon_dynamodb_table.arn
+        Resource = [
+          var.werkbon_dynamodb_table.arn,
+          "${var.werkbon_dynamodb_table.arn}/index/datum-index",
+          "${var.werkbon_dynamodb_table.arn}/index/klant-index"
+        ]
       },
       {
         Sid    = "LambdaInvokeAccess",
