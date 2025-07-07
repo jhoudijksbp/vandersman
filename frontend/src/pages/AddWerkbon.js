@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { generateClient } from "aws-amplify/api";
 import { addItem } from "../graphql/queries";
@@ -14,18 +14,19 @@ function PageAdd({ refreshToken }) {
   const [klanten, setKlanten] = useState([]);
   const [producten, setProducten] = useState([]);
   const [medewerkers, setMedewerkers] = useState([]);
+  const hasMounted = useRef(false);
 
   useEffect(() => {
-    async function fetchInitialData() {
+    const fetchInitialData = async (skipCache = false) => {
       try {
         const session = await fetchAuthSession();
         const payload = session.tokens?.idToken?.payload;
         const fullName = `${payload.given_name} ${payload.family_name}`;
 
         const [productenData, klantenData, medewerkersData] = await Promise.all([
-          loadJsonFromS3("rompslomp_products.json"),
-          loadJsonFromS3("rompslomp_contacts.json"),
-          loadJsonFromS3("cognito_medewerkers.json"),
+          loadJsonFromS3("rompslomp_products.json", skipCache),
+          loadJsonFromS3("rompslomp_contacts.json", skipCache),
+          loadJsonFromS3("cognito_medewerkers.json", skipCache),
         ]);
 
         setDefaultValues({
@@ -49,10 +50,15 @@ function PageAdd({ refreshToken }) {
       } catch (error) {
         console.error("Fout bij initialisatie:", error);
       }
-    }
+    };
 
-    fetchInitialData();
-  }, [refreshToken]); // <-- herlaad bij wijziging
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      fetchInitialData(false); // eerste keer, géén cache skip
+    } else {
+      fetchInitialData(true); // bij refreshToken change → skip cache
+    }
+  }, [refreshToken]);
 
   const handleSubmit = async (item) => {
     const newItem = {

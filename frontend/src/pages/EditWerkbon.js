@@ -29,11 +29,11 @@ function PageEdit({ refreshToken }) {
   const [producten, setProducten] = useState([]);
   const [medewerkers, setMedewerkers] = useState([]);
   const [klantId, setKlantId] = useState("");
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (!klantId) fetchItems();
-    fetchS3Data();
+    fetchS3Data(true); // force refresh bij data verversen
   }, [refreshToken]);
 
   useEffect(() => {
@@ -50,12 +50,12 @@ function PageEdit({ refreshToken }) {
     }
   }, [successMessage, errorMessage]);
 
-  const fetchS3Data = async () => {
+  const fetchS3Data = async (forceRefresh = false) => {
     try {
       const [productData, klantData, medewerkerData] = await Promise.all([
-        loadJsonFromS3("rompslomp_products.json"),
-        loadJsonFromS3("rompslomp_contacts.json"),
-        loadJsonFromS3("cognito_medewerkers.json"),
+        loadJsonFromS3("rompslomp_products.json", forceRefresh),
+        loadJsonFromS3("rompslomp_contacts.json", forceRefresh),
+        loadJsonFromS3("cognito_medewerkers.json", forceRefresh),
       ]);
 
       setMedewerkers((medewerkerData || []).map((m) => m.medewerker));
