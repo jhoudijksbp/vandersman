@@ -1,3 +1,4 @@
+from pynamodb.exceptions import PynamoDBException
 from pynamodb.models import Model
 from pynamodb.attributes import (
     UnicodeAttribute,
@@ -51,6 +52,10 @@ class WerkbonModel(Model):
                 werkbonnen.append(item.attribute_values)
             except cls.DoesNotExist:
                 logger.warning(f"Werkbon met ID {werkbon_id} op datum {datum} bestaat niet")
+            except PynamoDBException as e:
+                logger.exception(f"PynamoDB fout bij ophalen werkbon {werkbon_id}: {str(e)}")
+                raise RuntimeError(f"Fout bij ophalen werkbon {werkbon_id}: {e}")
             except Exception as e:
-                logger.error(f"Fout bij ophalen werkbon {werkbon_id}: {str(e)}")
+                logger.exception(f"Onverwachte fout bij ophalen werkbon {werkbon_id}")
+                raise RuntimeError(f"Onverwachte fout bij ophalen werkbon {werkbon_id}: {e}")
         return werkbonnen

@@ -158,11 +158,32 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# ✅ IAM Policy for DynamoDB Access
+
+
+# ✅ IAM Policy for SSM Parameter Store Access
+resource "aws_iam_policy" "ssm_policy" {
+  name        = "${var.project_name}LambdaFrontendSSMParameterPolicy"
+  description = "Allows Lambda to read and write SSM parameters"
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+        ]
+        Effect   = "Allow"
+        Resource = aws_ssm_parameter.rompslomp_token.arn
+      }
+    ]
+  })
+}
+
 resource "aws_iam_policy" "lambda_policy" {
   name        = "${var.project_name}-FrontendLambdaPolicy"
-  description = "Allows Lambda to access S3 and CloudWatch Logs"
-  
+  description = "Allows Lambda to access S3, CloudWatch Logs, DynamoDB, and SSM"
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -170,7 +191,7 @@ resource "aws_iam_policy" "lambda_policy" {
         Action = [
           "s3:*",
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = [
           aws_s3_bucket.rompslomp_data.arn,
           "${aws_s3_bucket.rompslomp_data.arn}/*"
@@ -187,31 +208,27 @@ resource "aws_iam_policy" "lambda_policy" {
       },
       {
         Action = [
-          "cognito-idp:ListUsers",
+          "cognito-idp:ListUsers"
         ]
         Effect   = "Allow"
-        Resource = [
-          "*"
-        ]
+        Resource = "*"
       },
-    ]
-  })
-}
-
-# ✅ IAM Policy for SSM Parameter Store Access
-resource "aws_iam_policy" "ssm_policy" {
-  name        = "${var.project_name}LambdaFrontendSSMParameterPolicy"
-  description = "Allows Lambda to read and write SSM parameters"
-  
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
       {
         Action = [
-          "ssm:GetParameter",
-          "ssm:GetParameters",
+          "dynamodb:GetItem",
+          "dynamodb:BatchGetItem",
+          "dynamodb:Query"
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
+        Resource = [
+          var.werkbon_dynamodb_table.arn,
+        ]
+      },
+      {
+        Action = [
+          "ssm:GetParameter"
+        ]
+        Effect = "Allow"
         Resource = aws_ssm_parameter.rompslomp_token.arn
       }
     ]
