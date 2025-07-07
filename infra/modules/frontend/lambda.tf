@@ -41,6 +41,27 @@ resource "aws_lambda_function" "get_cognito_users_lambda" {
   layers = [var.lambda_layer_arn]
 }
 
+resource "aws_lambda_function" "rompslomp_facturatie_lambda" {
+  function_name     = "${var.project_name}RompslompFacturatie"
+  role              = aws_iam_role.lambda_role.arn
+  handler           = "lambda_code.functions.rompslomp_integrator.handler_invoice.lambda_handler"
+  runtime           = var.python_version
+  s3_bucket         = var.lambda_package_bucket
+  s3_key            = var.lambda_package_key
+  s3_object_version = var.lambda_package_version_id
+  timeout           = 30
+  memory_size       = 256
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE      = var.werkbon_dynamodb_table.name
+      AWS_REGION          = data.aws_region.current.name
+    }
+  }
+
+  layers = [var.lambda_layer_arn]
+}
+
 resource "aws_lambda_permission" "allow_appsync_invoke_rompslomp_lambda" {
   statement_id  = "AllowAppSyncInvokeRompslomp"
   action        = "lambda:InvokeFunction"

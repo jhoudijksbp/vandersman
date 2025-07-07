@@ -1,5 +1,5 @@
 from unittest.mock import MagicMock
-from lambda_code.functions.rompslomp_integrator.handler_offerte import lambda_handler
+from lambda_code.functions.rompslomp_integrator.handler_invoice import lambda_handler
 
 
 def test_lambda_handler_returns_werkbonnen(populate_werkbon_data, werkbon_records):
