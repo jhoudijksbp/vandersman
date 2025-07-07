@@ -55,7 +55,6 @@ resource "aws_lambda_function" "rompslomp_facturatie_lambda" {
   environment {
     variables = {
       DYNAMODB_TABLE      = var.werkbon_dynamodb_table.name
-      AWS_REGION          = data.aws_region.current.name
     }
   }
 
@@ -74,6 +73,14 @@ resource "aws_lambda_permission" "allow_appsync_invoke_cognito_lambda" {
   statement_id  = "AllowAppSyncInvokeCognito"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.get_cognito_users_lambda.function_name
+  principal     = "appsync.amazonaws.com"
+  source_arn    = aws_appsync_graphql_api.appsync_api.arn
+}
+
+resource "aws_lambda_permission" "allow_appsync_invoke_rompslomp_facturatie_lambda" {
+  statement_id  = "AllowAppSyncInvokeRompslompFacturatie"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.rompslomp_facturatie_lambda.function_name
   principal     = "appsync.amazonaws.com"
   source_arn    = aws_appsync_graphql_api.appsync_api.arn
 }

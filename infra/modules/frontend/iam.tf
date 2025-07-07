@@ -81,7 +81,8 @@ resource "aws_iam_role_policy" "appsync_policy" {
         ],
         Resource = [
           aws_lambda_function.rompslomp_integrator_lambda.arn,
-          aws_lambda_function.get_cognito_users_lambda.arn
+          aws_lambda_function.get_cognito_users_lambda.arn,
+          aws_lambda_function.rompslomp_facturatie_lambda.arn
         ]
       }
     ]
