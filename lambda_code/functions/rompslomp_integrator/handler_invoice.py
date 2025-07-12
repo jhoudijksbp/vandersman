@@ -58,9 +58,25 @@ def werkbonnen_to_invoice_payload(werkbonnen: list[dict], default_tarief_per_uur
 
 @logger.inject_lambda_context(log_event=True)
 def lambda_handler(event, context):
-    id_datum_pairs = event.get("ids", [])
-    if not id_datum_pairs:
+    raw_ids = event.get("ids", [])
+    if not raw_ids:
         return {"statusCode": 400, "body": "No IDs provided"}
+
+    try:
+        # Ondersteunt input als lijst van dicts met "id" en "datum"
+        id_datum_pairs = [
+            (item["id"], item["datum"]) 
+            for item in raw_ids
+            if isinstance(item, dict) and "id" in item and "datum" in item
+        ]
+    except Exception as e:
+        logger.exception("Kon IDs niet parsen uit event")
+        return {"statusCode": 400, "body": f"Ongeldige inputstructuur: {str(e)}"}
+
+    if not id_datum_pairs:
+        return {"statusCode": 400, "body": "Geen geldige ID-datum combinaties gevonden"}
+
+    logger.info(f"Parsed ID-datum combinaties: {id_datum_pairs}")
 
     werkbon_data = WerkbonModel.get_by_ids(id_datum_pairs)
 
@@ -74,6 +90,7 @@ def lambda_handler(event, context):
     company = fetch_company(access_token)
     logger.info(json.dumps(payload, indent=4))
     result = create_sales_invoice(access_token, company["id"], payload)
+
     logger.info(result)
     return {
         "statusCode": 200,
