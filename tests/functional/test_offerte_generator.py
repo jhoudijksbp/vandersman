@@ -4,8 +4,13 @@ from lambda_code.functions.rompslomp_integrator.handler_invoice import lambda_ha
 
 def test_lambda_handler_returns_werkbonnen(populate_werkbon_data, werkbon_records):
     event = {
-        "ids": [{"id": record["id"], "datum": record["datum"]} for record in werkbon_records]
-    }
+        "field": "generateRompslompInvoice",
+        "arguments": {
+            "ids": [
+                {"id": record["id"], "datum": record["datum"]} for record in werkbon_records
+            ]
+        }
+    }           
 
     # ✅ Mock een context zoals AWS dat doet
     mock_context = MagicMock()
@@ -16,4 +21,4 @@ def test_lambda_handler_returns_werkbonnen(populate_werkbon_data, werkbon_record
 
     response = lambda_handler(event, context=mock_context)
 
-    assert response["statusCode"] == 200
+    assert response["status"] == "200"

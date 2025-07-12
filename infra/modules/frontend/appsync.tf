@@ -240,3 +240,36 @@ EOF
 $util.toJson($ctx.result)
 EOF
 }
+
+resource "aws_appsync_datasource" "lambda_generate_invoice" {
+  api_id           = aws_appsync_graphql_api.appsync_api.id
+  name             = "GenerateInvoiceLambda"
+  type             = "AWS_LAMBDA"
+  service_role_arn = aws_iam_role.appsync_role.arn
+
+  lambda_config {
+    function_arn = aws_lambda_function.rompslomp_facturatie_lambda.arn
+  }
+}
+
+resource "aws_appsync_resolver" "generate_invoice" {
+  api_id      = aws_appsync_graphql_api.appsync_api.id
+  type        = "Mutation"
+  field       = "generateRompslompInvoice"
+  data_source = aws_appsync_datasource.lambda_generate_invoice.name
+
+  request_template = <<EOF
+{
+  "version": "2018-05-29",
+  "operation": "Invoke",
+  "payload": {
+    "field": "$ctx.info.fieldName",
+    "arguments": $util.toJson($ctx.args)
+  }
+}
+EOF
+
+  response_template = <<EOF
+$util.toJson($ctx.result)
+EOF
+}

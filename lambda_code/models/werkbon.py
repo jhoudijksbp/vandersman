@@ -39,6 +39,7 @@ class WerkbonModel(Model):
     klant_id = UnicodeAttribute(null=True)
     klant_naam = UnicodeAttribute(null=True)
     medewerker = UnicodeAttribute(null=True)
+    invoice_id = UnicodeAttribute(null=True)
 
     products = ListAttribute(of=Product, null=True)
     services = ListAttribute(of=Service, null=True)

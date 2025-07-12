@@ -12,6 +12,7 @@ type Mutation {
   updateItem(input: UpdateItemInput!): Item
   triggerGetCognitoJob: TriggerJobResult
   triggerRomsplompDataJob: TriggerJobResult
+  generateRompslompInvoice(ids: [WerkbonIdDatumInput!]!): TriggerJobResult
 }
 
 type Item {
@@ -81,4 +82,9 @@ input ServiceInput {
 type TriggerJobResult {
   status: String!
   message: String
+}
+
+input WerkbonIdDatumInput {
+  id: ID!
+  datum: AWSDateTime!
 }
