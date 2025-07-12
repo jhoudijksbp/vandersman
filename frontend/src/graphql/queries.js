@@ -112,3 +112,12 @@ export const triggerDataJobs = /* GraphQL */ `
     }
   }
 `;
+
+export const generateRompslompInvoice = /* GraphQL */ `
+  mutation GenerateRompslompInvoice($ids: [WerkbonIdDatumInput!]!) {
+    generateRompslompInvoice(ids: $ids) {
+      status
+      message
+    }
+  }
+`;

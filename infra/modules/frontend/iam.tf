@@ -65,7 +65,8 @@ resource "aws_iam_role_policy" "appsync_policy" {
           "dynamodb:GetItem",
           "dynamodb:Query",
           "dynamodb:Scan",
-          "dynamodb:PutItem"
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem"
         ],
         Resource = [
           var.werkbon_dynamodb_table.arn,
@@ -217,7 +218,8 @@ resource "aws_iam_policy" "lambda_policy" {
         Action = [
           "dynamodb:GetItem",
           "dynamodb:BatchGetItem",
-          "dynamodb:Query"
+          "dynamodb:Query",
+          "dynamodb:UpdateItem",
         ]
         Effect = "Allow"
         Resource = [

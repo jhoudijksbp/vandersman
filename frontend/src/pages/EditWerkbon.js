@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/api";
 import awsExports from "../aws-exports";
-import { listItems, listItemsByKlant, updateItem } from "../graphql/queries";
+import { listItems, listItemsByKlant, updateItem, generateRompslompInvoice } from "../graphql/queries";
 import WerkbonForm from "../components/WerkbonForm";
 import WerkbonPDFView from "../components/WerkbonPDFView";
 import html2canvas from "html2canvas";
@@ -29,11 +29,12 @@ function PageEdit({ refreshToken }) {
   const [producten, setProducten] = useState([]);
   const [medewerkers, setMedewerkers] = useState([]);
   const [klantId, setKlantId] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
   const itemsPerPage = 10;
 
   useEffect(() => {
     if (!klantId) fetchItems();
-    fetchS3Data(true); // force refresh bij data verversen
+    fetchS3Data(true);
   }, [refreshToken]);
 
   useEffect(() => {
@@ -140,6 +141,67 @@ function PageEdit({ refreshToken }) {
     }
   };
 
+  const toggleSelect = (item) => {
+    const key = `${item.id}_${item.datum}`;
+    const isAlreadySelected = selectedIds.includes(key);
+
+    if (!isAlreadySelected) {
+      // Haal de klant_id van al geselecteerde items op
+      const geselecteerdeItems = items.filter((i) =>
+        selectedIds.includes(`${i.id}_${i.datum}`)
+      );
+      const klantIds = new Set(geselecteerdeItems.map((i) => i.klant_id));
+
+      if (klantIds.size > 0 && !klantIds.has(item.klant_id)) {
+        alert("Je kunt alleen werkbonnen selecteren van dezelfde klant.");
+        return;
+      }
+    }
+
+    setSelectedIds((prev) =>
+      isAlreadySelected ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const isSelected = (item) => selectedIds.includes(`${item.id}_${item.datum}`);
+
+  const handleMaakFactuur = async () => {
+    const geselecteerdeItems = items.filter((item) =>
+      selectedIds.includes(`${item.id}_${item.datum}`)
+    );
+
+    const ids = geselecteerdeItems.map((item) => ({
+      id: item.id,
+      datum: item.datum,
+    }));
+
+    if (ids.length === 0) {
+      alert("Selecteer eerst één of meer werkbonnen");
+      return;
+    }
+
+    try {
+      const result = await client.graphql({
+        query: generateRompslompInvoice,
+        variables: { ids },
+      });
+
+      const response = result.data.generateRompslompInvoice;
+      if (response.status === "200") {
+        setSuccessMessage("Factuur succesvol aangemaakt!");
+        setErrorMessage(null);
+        setSelectedIds([]);
+        fetchItems();
+      } else {
+        setErrorMessage(`Fout: ${response.message}`);
+        setSuccessMessage(null);
+      }
+    } catch (err) {
+      console.error("Fout bij facturatie:", err);
+      setErrorMessage("Er ging iets mis bij het aanmaken van de factuur.");
+    }
+  };
+
   const handleDownloadPDF = async () => {
     const input = pdfRef.current;
     if (!input) return;
@@ -226,6 +288,7 @@ function PageEdit({ refreshToken }) {
             <table className="min-w-full table-auto border border-gray-300 text-sm">
               <thead className="bg-gray-100">
                 <tr>
+                  <th className="border px-3 py-2">✔</th>
                   <th className="border px-3 py-2 cursor-pointer" onClick={() => handleSort("datum")}>
                     Datum
                   </th>
@@ -243,7 +306,14 @@ function PageEdit({ refreshToken }) {
               </thead>
               <tbody>
                 {paginatedItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                  <tr key={`${item.id}_${item.datum}`} className="hover:bg-gray-50">
+                    <td className="border px-3 py-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isSelected(item)}
+                        onChange={() => toggleSelect(item)}
+                      />
+                    </td>
                     <td className="border px-3 py-2">
                       {new Date(item.datum).toLocaleDateString("nl-NL", {
                         day: "2-digit",
@@ -273,6 +343,24 @@ function PageEdit({ refreshToken }) {
               </tbody>
             </table>
           </div>
+          {selectedIds.length > 0 && (
+            <div className="mt-2 text-sm text-gray-600">
+              Geselecteerde klant:{" "}
+              {
+                items.find((i) => selectedIds.includes(`${i.id}_${i.datum}`))?.klant_naam
+              }
+            </div>
+          )}
+          {selectedIds.length > 0 && (
+            <div className="mt-4">
+              <button
+                onClick={handleMaakFactuur}
+                className="bg-jordygroen text-white px-4 py-2 rounded shadow hover:bg-opacity-90"
+              >
+                🧾 Maak factuur van selectie
+              </button>
+            </div>
+          )}
 
           <div className="flex justify-center mt-4 space-x-2">
             <button
